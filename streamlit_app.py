@@ -138,7 +138,7 @@ elif "Manuel" in secim:
         elif risk_score >= 6:
             return 'MODERATE', risk_score, [
                 'Aurora gözlemleri orta düzey uzay havası aktivitesini göstermektedir.',
-                'GNSS'de küçük sapmalar olabilir. İletişim sorunları olasılığı düşük ancak mümkündür.'
+                "GNSS'de küçük sapmalar olabilir. İletişim sorunları olasılığı düşük ancak mümkündür."
             ] 
         else:    
             return 'LOW', risk_score, [
