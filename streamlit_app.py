@@ -145,20 +145,20 @@ elif "Manuel" in secim:
                 'No significant operational risk expected'
             ]
 
-    def academic_interpretation(risk_level):
-        if risk_level == 'HIGH':
-            return (
-                "Girilen aurora gözlem özellikleri yüksek jeomanyetik aktiviteye işaret etmektedir. "
-                "Bu koşullar altında GNSS ve haberleşme sistemlerinde bozulma riski yüksektir."
-            )
-        elif risk_level == 'MODERATE':
-            return (
-                "Aurora gözlemleri orta düzey uzay havası aktivitesini göstermektedir."
-            )
-        else:
-            return (
-                "Aurora gözlemleri sakin uzay havası koşullarına işaret etmektedir."
-            )
+        def academic_interpretation(risk_level):
+            if risk_level == 'HIGH':
+                return (
+                    "Girilen aurora gözlem özellikleri yüksek jeomanyetik aktiviteye işaret etmektedir. "
+                    "Bu koşullar altında GNSS ve haberleşme sistemlerinde bozulma riski yüksektir."
+                )
+            elif risk_level == 'MODERATE':
+                return (
+                    "Aurora gözlemleri orta düzey uzay havası aktivitesini göstermektedir."
+                )
+            else:
+                return (
+                    "Aurora gözlemleri sakin uzay havası koşullarına işaret etmektedir."
+                )
 
     brightness = st.selectbox("Parlaklık", ["düşük", "orta", "yüksek"])
     color_variety = st.selectbox("Renk", ["tek renk", "çok renkli"])
