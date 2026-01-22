@@ -1,18 +1,23 @@
-secim = input("""
-Aurora gözlem türünü seçiniz:
+import streamlit as st
+import cv2
+import numpy as np
 
-1 - Görsel yükle (fotoğraf ile analiz)
-2 - Manuel giriş (kural ve veri tabanlı model)
+st.title("Aurora Tabanlı GNSS Risk Analizi")
 
-Seçiminiz (1/2): """)
-if secim == "1":
-    print("Görsel destekli risk analizi başlatılıyor...\n")
+# ---------------- SEÇİM ----------------
+secim = st.radio(
+    "Aurora gözlem türünü seçiniz:",
+    [
+        "Görsel yükle (fotoğraf ile analiz)",
+        "Manuel giriş (kural ve veri tabanlı model)"
+    ]
+)
 
-    # --- IMPORTS ---
-    import cv2
-    import numpy as np
-    import ipywidgets as widgets
-    from IPython.display import display, clear_output
+# =========================================================
+# =================== GÖRSEL MOD ==========================
+# =========================================================
+if "Görsel" in secim:
+    st.subheader("Görsel Destekli Risk Analizi")
 
     # --- Risk Model ---
     def aurora_risk_model(brightness, color_variety, spatial_extent):
@@ -28,7 +33,6 @@ if secim == "1":
         else:
             return 'LOW', score
 
-
     # --- Feature Extraction ---
     def extract_features(img):
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -37,7 +41,11 @@ if secim == "1":
         mean_brightness = np.mean(gray)
         brightness = 'low' if mean_brightness < 80 else 'medium' if mean_brightness < 150 else 'high'
 
-        color_std = np.mean([np.std(rgb[:,:,0]), np.std(rgb[:,:,1]), np.std(rgb[:,:,2])])
+        color_std = np.mean([
+            np.std(rgb[:,:,0]),
+            np.std(rgb[:,:,1]),
+            np.std(rgb[:,:,2])
+        ])
         color_variety = 'multiple' if color_std > 40 else 'single'
 
         _, thresh = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY)
@@ -46,8 +54,7 @@ if secim == "1":
 
         return brightness, color_variety, spatial_extent
 
-
-    # --- PROCESS MULTIPLE IMAGES ---
+    # --- Analyze Multiple Images ---
     def analyze_images(images):
         scores = []
         levels = []
@@ -69,50 +76,31 @@ if secim == "1":
 
         return scores, levels, avg_score, final_risk
 
-
-    # --- UI ELEMENTS ---
-    uploader = widgets.FileUpload(
-        accept='image/*',
-        multiple=True,
-        description='Aurora Görselleri Yükle'
+    uploaded_files = st.file_uploader(
+        "Aurora görsellerini yükleyin",
+        type=["jpg", "png", "jpeg"],
+        accept_multiple_files=True
     )
 
-    run_button = widgets.Button(
-        description='Risk Analizi Başlat',
-        button_style='primary'
-    )
+    if uploaded_files and st.button("Risk Analizi Başlat"):
+        images = []
+        for file in uploaded_files:
+            data = np.frombuffer(file.read(), np.uint8)
+            img = cv2.imdecode(data, cv2.IMREAD_COLOR)
+            images.append(img)
 
-    output = widgets.Output()
+        scores, levels, avg_score, final_risk = analyze_images(images)
 
-    # --- BUTTON ACTION ---
-    def on_run_clicked(b):
-        with output:
-            clear_output()
+        st.write("Görsel Bazlı Risk Skorları:", scores)
+        st.write("Görsel Bazlı Risk Seviyeleri:", levels)
+        st.write("Ortalama Risk Skoru:", round(avg_score, 2))
+        st.success(f"SONUÇ: {final_risk} RİSK")
 
-            if not uploader.value:
-                print("No images uploaded.")
-                return
-
-            images = []
-            for file in uploader.value.values():
-                data = np.frombuffer(file['content'], np.uint8)
-                img = cv2.imdecode(data, cv2.IMREAD_COLOR)
-                images.append(img)
-
-            scores, levels, avg_score, final_risk = analyze_images(images)
-
-            print("Individual Image Risk Scores:", scores)
-            print("Individual Risk Levels:", levels)
-            print("\nAVERAGE RISK SCORE:", round(avg_score, 2))
-            print("FINAL RISK LEVEL:", final_risk)
-
-    run_button.on_click(on_run_clicked)
-
-    # --- DISPLAY UI ---
-    display(uploader, run_button, output)
-
-if secim == "2":
-    print("Manuel (kural ve veri tabanlı) risk analizi başlatılıyor...\n")
+# =========================================================
+# =================== MANUEL MOD ==========================
+# =========================================================
+elif "Manuel" in secim:
+    st.subheader("Manuel (Kural ve Veri Tabanlı) Risk Analizi")
 
     def aurora_risk_model(brightness, color_variety, spatial_extent, temporal_behavior):
         risk_score = 0
@@ -142,100 +130,51 @@ if secim == "2":
             risk_score += 1
 
         if risk_score >= 9:
-            risk_level = 'HIGH'
-            impacts = [
+            return 'HIGH', risk_score, [
                 'GNSS signal degradation likely',
                 'HF communication disruption possible',
                 'Scientific measurements may be unreliable'
             ]
         elif risk_score >= 6:
-            risk_level = 'MODERATE'
-            impacts = [
+            return 'MODERATE', risk_score, [
                 'Minor GNSS inaccuracies possible',
                 'Communication disturbances unlikely but possible'
             ]
         else:
-            risk_level = 'LOW'
-            impacts = [
+            return 'LOW', risk_score, [
                 'No significant operational risk expected'
             ]
-
-        return risk_level, risk_score, impacts
-
 
     def academic_interpretation(risk_level):
         if risk_level == 'HIGH':
             return (
                 "Girilen aurora gözlem özellikleri yüksek jeomanyetik aktiviteye işaret etmektedir. "
-                "Bu koşullar altında GNSS ve haberleşme sistemlerinde bozulma riski yüksektir; "
-                "bilimsel ölçümlerin belirsizliği artabilir."
+                "Bu koşullar altında GNSS ve haberleşme sistemlerinde bozulma riski yüksektir."
             )
         elif risk_level == 'MODERATE':
             return (
-                "Aurora gözlemleri orta düzey uzay havası aktivitesini göstermektedir. "
-                "GNSS doğruluğunda sınırlı bozulmalar ve geçici iletişim etkileri olasıdır."
+                "Aurora gözlemleri orta düzey uzay havası aktivitesini göstermektedir."
             )
         else:
             return (
-                "Aurora gözlemleri sakin uzay havası koşullarına işaret etmektedir. "
-                "Önemli bir operasyonel risk beklenmemektedir."
+                "Aurora gözlemleri sakin uzay havası koşullarına işaret etmektedir."
             )
 
-    import ipywidgets as widgets
-    from IPython.display import display
+    brightness = st.selectbox("Parlaklık", ["düşük", "orta", "yüksek"])
+    color_variety = st.selectbox("Renk", ["tek renk", "çok renkli"])
+    spatial_extent = st.selectbox("Yayılım", ["dar", "geniş"])
+    temporal_behavior = st.selectbox("Zamansal Davranış", ["sakin", "değişken", "patlama"])
 
-    brightness_widget = widgets.Dropdown(
-        options=['düşük', 'orta', 'yüksek'],
-        description='Parlaklık:'
-    )
+    if st.button("Risk Analizini Çalıştır"):
+        risk, score, effects = aurora_risk_model(
+            brightness,
+            color_variety,
+            spatial_extent,
+            temporal_behavior
+        )
 
-    color_widget = widgets.Dropdown(
-        options=['tek renk', 'çok renkli'],
-        description='Renk:'
-    )
-
-    spatial_widget = widgets.Dropdown(
-        options=['dar', 'geniş'],
-        description='Yayılım:'
-    )
-
-    temporal_widget = widgets.Dropdown(
-        options=['sakin', 'değişken', 'patlama'],
-        description='Zamansal:'
-    )
-
-    output = widgets.Output()
-
-    def run_model(button):
-        output.clear_output()
-        with output:
-            risk, score, effects = aurora_risk_model(
-                brightness_widget.value,
-                color_widget.value,
-                spatial_widget.value,
-                temporal_widget.value
-            )
-
-            comment = academic_interpretation(risk)
-
-            print("SONUÇ")
-            print("Risk Seviyesi:", risk)
-            print("Risk Skoru:", score)
-            print("Olası Etkiler:")
-            for effect in effects:
-                print("-", effect)
-
-            print("\nDetaylı Açıklama:")
-            print(comment)
-
-    run_button = widgets.Button(description="Run Risk Assessment")
-    run_button.on_click(run_model)
-
-    display(
-        brightness_widget,
-        color_widget,
-        spatial_widget,
-        temporal_widget,
-        run_button,
-        output
-    )
+        st.subheader("SONUÇ")
+        st.write("Risk Seviyesi:", risk)
+        st.write("Risk Skoru:", score)
+        st.write("Olası Etkiler:")
+        for e
