@@ -177,4 +177,5 @@ elif "Manuel" in secim:
         st.write("Risk Seviyesi:", risk)
         st.write("Risk Skoru:", score)
         st.write("Olası Etkiler:")
-        for e
+        for e in effects:
+            st.write("-", e)
