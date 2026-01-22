@@ -68,11 +68,11 @@ if "Görsel" in secim:
         avg_score = np.mean(scores)
 
         if avg_score >= 7:
-            final_risk = 'HIGH'
+            final_risk = 'Yüksek'
         elif avg_score >= 5:
-            final_risk = 'MODERATE'
+            final_risk = 'Orta'
         else:
-            final_risk = 'LOW'
+            final_risk = 'Düşük'
 
         return scores, levels, avg_score, final_risk
 
@@ -131,34 +131,20 @@ elif "Manuel" in secim:
 
         if risk_score >= 9:
             return 'HIGH', risk_score, [
-                'GNSS signal degradation likely',
-                'HF communication disruption possible',
-                'Scientific measurements may be unreliable'
+                'Girilen aurora gözlem özellikleri yüksek jeomanyetik aktiviteye işaret etmektedir.',
+                'Bu koşullar altında GNSS ve haberleşme sistemlerinde bozulma riski yüksektir.',
+                'Bilimsel ölçümler güvenilir olmayabilir.'
             ]
         elif risk_score >= 6:
             return 'MODERATE', risk_score, [
-                'Minor GNSS inaccuracies possible',
-                'Communication disturbances unlikely but possible'
-            ]
-        else:
+                'Aurora gözlemleri orta düzey uzay havası aktivitesini göstermektedir.',
+                'GNSS'de küçük sapmalar olabilir. İletişim sorunları olasılığı düşük ancak mümkündür.'
+            ] 
+        else:    
             return 'LOW', risk_score, [
-                'No significant operational risk expected'
+                'Aurora gözlemleri sakin uzay havası koşullarına işaret etmektedir.',
+                'Önemli bir operasyonel risk beklenmiyor.'
             ]
-
-        def academic_interpretation(risk_level):
-            if risk_level == 'HIGH':
-                return (
-                    "Girilen aurora gözlem özellikleri yüksek jeomanyetik aktiviteye işaret etmektedir. "
-                    "Bu koşullar altında GNSS ve haberleşme sistemlerinde bozulma riski yüksektir."
-                )
-            elif risk_level == 'MODERATE':
-                return (
-                    "Aurora gözlemleri orta düzey uzay havası aktivitesini göstermektedir."
-                )
-            else:
-                return (
-                    "Aurora gözlemleri sakin uzay havası koşullarına işaret etmektedir."
-                )
 
     brightness = st.selectbox("Parlaklık", ["düşük", "orta", "yüksek"])
     color_variety = st.selectbox("Renk", ["tek renk", "çok renkli"])
