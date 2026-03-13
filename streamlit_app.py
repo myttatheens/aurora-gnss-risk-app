@@ -168,6 +168,24 @@ if secim == "Görsel yükle":
             st.write("Yorum:")
             st.write(comment)
 
+        # ----- GAUGE GRAFİĞİ -----
+
+    fig = go.Figure(go.Indicator(
+        mode="gauge+number",
+        value=score,
+        title={'text': "GNSS Risk Skoru"},
+        gauge={
+            'axis': {'range': [0, 12]},
+            'bar': {'color': "red"},
+            'steps': [
+                {'range': [0, 5], 'color': "green"},
+                {'range': [5, 8], 'color': "orange"},
+                {'range': [8, 12], 'color': "red"},
+            ],
+        }
+    ))
+
+    st.plotly_chart(fig)
 
 # ===============================
 # MANUEL MOD
@@ -275,3 +293,21 @@ if secim == "Manuel giriş":
 
         st.write("Yorum:")
         st.write(comment)
+    # ----- GAUGE GRAFİĞİ -----
+
+    fig = go.Figure(go.Indicator(
+        mode="gauge+number",
+        value=score,
+        title={'text': "GNSS Risk Skoru"},
+        gauge={
+            'axis': {'range': [0, 12]},
+            'bar': {'color': "red"},
+            'steps': [
+                {'range': [0, 5], 'color': "green"},
+                {'range': [5, 8], 'color': "orange"},
+                {'range': [8, 12], 'color': "red"},
+            ],
+        }
+    ))
+
+    st.plotly_chart(fig)
