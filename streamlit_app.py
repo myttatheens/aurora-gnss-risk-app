@@ -1,109 +1,190 @@
 import streamlit as st
 import cv2
 import numpy as np
+from PIL import Image
+
 
 st.title("Aurora Tabanlı GNSS Risk Analizi")
 
-# ---------------- SEÇİM ----------------
+
 secim = st.radio(
     "Aurora gözlem türünü seçiniz:",
-    [
-        "Görsel yükle (fotoğraf ile analiz)",
-        "Manuel giriş (kural ve veri tabanlı model)"
-    ]
+    ["Görsel yükle", "Manuel giriş"]
 )
 
-# =========================================================
-# =================== GÖRSEL MOD ==========================
-# =========================================================
-if "Görsel" in secim:
-    st.subheader("Görsel Destekli Risk Analizi")
 
-    # --- Risk Model ---
+# ===============================
+# ORTAK FONKSİYONLAR
+# ===============================
+
+def academic_interpretation(risk_level):
+
+    if risk_level == 'HIGH':
+        return (
+            "Aurora gözlemi yüksek jeomanyetik aktiviteye işaret etmektedir. "
+            "Bu koşullar altında GNSS doğruluğunda bozulma, HF iletişim kesintileri "
+            "ve bilimsel ölçümlerde hata olasılığı artar."
+        )
+
+    elif risk_level == 'MODERATE':
+        return (
+            "Aurora gözlemi orta düzey uzay havası aktivitesini göstermektedir. "
+            "GNSS sinyallerinde küçük sapmalar ve sınırlı iletişim etkileri oluşabilir."
+        )
+
+    else:
+        return (
+            "Aurora gözlemi düşük uzay havası aktivitesine işaret etmektedir. "
+            "Operasyonel sistemler için önemli bir risk beklenmemektedir."
+        )
+
+
+# ===============================
+# GÖRSEL MOD
+# ===============================
+
+if secim == "Görsel yükle":
+
+    st.subheader("Görsel destekli risk analizi")
+
     def aurora_risk_model(brightness, color_variety, spatial_extent):
+
         score = 0
+
         score += {'low':1, 'medium':2, 'high':3}[brightness]
         score += {'single':1, 'multiple':2}[color_variety]
         score += {'narrow':1, 'wide':3}[spatial_extent]
 
         if score >= 7:
-            return 'HIGH', score
-        elif score >= 5:
-            return 'MODERATE', score
-        else:
-            return 'LOW', score
+            return 'HIGH', score, [
+                'GNSS signal degradation likely',
+                'HF communication disruption possible',
+                'Scientific measurements may be unreliable'
+            ]
 
-    # --- Feature Extraction ---
+        elif score >= 5:
+            return 'MODERATE', score, [
+                'Minor GNSS inaccuracies possible',
+                'Communication disturbance possible'
+            ]
+
+        else:
+            return 'LOW', score, [
+                'No significant operational risk expected'
+            ]
+
+
     def extract_features(img):
+
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
         mean_brightness = np.mean(gray)
-        brightness = 'low' if mean_brightness < 80 else 'medium' if mean_brightness < 150 else 'high'
+
+        brightness = (
+            'low' if mean_brightness < 80
+            else 'medium' if mean_brightness < 150
+            else 'high'
+        )
 
         color_std = np.mean([
             np.std(rgb[:,:,0]),
             np.std(rgb[:,:,1]),
             np.std(rgb[:,:,2])
         ])
+
         color_variety = 'multiple' if color_std > 40 else 'single'
 
         _, thresh = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY)
+
         ratio = np.sum(thresh > 0) / thresh.size
+
         spatial_extent = 'wide' if ratio > 0.10 else 'narrow'
 
         return brightness, color_variety, spatial_extent
 
-    # --- Analyze Multiple Images ---
+
     def analyze_images(images):
+
         scores = []
         levels = []
+        last_impacts = []
 
         for img in images:
+
             b, c, s = extract_features(img)
-            level, score = aurora_risk_model(b, c, s)
+
+            level, score, impacts = aurora_risk_model(b, c, s)
+
             scores.append(score)
             levels.append(level)
+            last_impacts = impacts
 
         avg_score = np.mean(scores)
 
         if avg_score >= 7:
-            final_risk = 'Yüksek'
-        elif avg_score >= 5:
-            final_risk = 'Orta'
-        else:
-            final_risk = 'Düşük'
+            final_risk = 'HIGH'
 
-        return scores, levels, avg_score, final_risk
+        elif avg_score >= 5:
+            final_risk = 'MODERATE'
+
+        else:
+            final_risk = 'LOW'
+
+        return scores, levels, avg_score, final_risk, last_impacts
+
 
     uploaded_files = st.file_uploader(
-        "Aurora görsellerini yükleyin",
-        type=["jpg", "png", "jpeg"],
+        "Aurora görselleri yükle",
         accept_multiple_files=True
     )
 
-    if uploaded_files and st.button("Risk Analizi Başlat"):
-        images = []
-        for file in uploaded_files:
-            data = np.frombuffer(file.read(), np.uint8)
-            img = cv2.imdecode(data, cv2.IMREAD_COLOR)
-            images.append(img)
 
-        scores, levels, avg_score, final_risk = analyze_images(images)
+    if st.button("Risk Analizi Başlat"):
 
-        st.write("Görsel Bazlı Risk Skorları:", scores)
-        st.write("Görsel Bazlı Risk Seviyeleri:", levels)
-        st.write("Ortalama Risk Skoru:", round(avg_score, 2))
-        st.success(f"SONUÇ: {final_risk} RİSK")
+        if uploaded_files:
 
-# =========================================================
-# =================== MANUEL MOD ==========================
-# =========================================================
-elif "Manuel" in secim:
-    st.subheader("Manuel (Kural ve Veri Tabanlı) Risk Analizi")
+            images = []
+
+            for file in uploaded_files:
+
+                image = Image.open(file)
+                img = np.array(image)
+
+                img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+
+                images.append(img)
+
+            scores, levels, avg_score, final_risk, impacts = analyze_images(images)
+
+            comment = academic_interpretation(final_risk)
+
+            st.write("### SONUÇ")
+
+            st.write("Risk Seviyesi:", final_risk)
+            st.write("Ortalama Skor:", round(avg_score,2))
+
+            st.write("Olası Etkiler:")
+            for e in impacts:
+                st.write("-", e)
+
+            st.write("Yorum:")
+            st.write(comment)
+
+
+# ===============================
+# MANUEL MOD
+# ===============================
+
+if secim == "Manuel giriş":
+
+    st.subheader("Manuel (kural tabanlı) risk analizi")
+
 
     def aurora_risk_model(brightness, color_variety, spatial_extent, temporal_behavior):
+
         risk_score = 0
+
 
         if brightness == 'yüksek':
             risk_score += 3
@@ -112,15 +193,18 @@ elif "Manuel" in secim:
         else:
             risk_score += 1
 
+
         if color_variety == 'çok renkli':
             risk_score += 2
         else:
             risk_score += 1
 
+
         if spatial_extent == 'geniş':
             risk_score += 3
         else:
             risk_score += 1
+
 
         if temporal_behavior == 'patlama':
             risk_score += 3
@@ -129,39 +213,71 @@ elif "Manuel" in secim:
         else:
             risk_score += 1
 
+
         if risk_score >= 9:
+
             return 'HIGH', risk_score, [
-                'Girilen aurora gözlem özellikleri yüksek jeomanyetik aktiviteye işaret etmektedir.',
-                'Bu koşullar altında GNSS ve haberleşme sistemlerinde bozulma riski yüksektir.',
-                'Bilimsel ölçümler güvenilir olmayabilir.'
+                'GNSS signal degradation likely',
+                'HF communication disruption possible',
+                'Scientific measurements may be unreliable'
             ]
+
+
         elif risk_score >= 6:
+
             return 'MODERATE', risk_score, [
-                'Aurora gözlemleri orta düzey uzay havası aktivitesini göstermektedir.',
-                "GNSS'de küçük sapmalar olabilir. İletişim sorunları olasılığı düşük ancak mümkündür."
-            ] 
-        else:    
-            return 'LOW', risk_score, [
-                'Aurora gözlemleri sakin uzay havası koşullarına işaret etmektedir.',
-                'Önemli bir operasyonel risk beklenmiyor.'
+                'Minor GNSS inaccuracies possible',
+                'Communication disturbance possible'
             ]
 
-    brightness = st.selectbox("Parlaklık", ["düşük", "orta", "yüksek"])
-    color_variety = st.selectbox("Renk", ["tek renk", "çok renkli"])
-    spatial_extent = st.selectbox("Yayılım", ["dar", "geniş"])
-    temporal_behavior = st.selectbox("Zamansal Davranış", ["sakin", "değişken", "patlama"])
 
-    if st.button("Risk Analizini Çalıştır"):
-        risk, score, effects = aurora_risk_model(
+        else:
+
+            return 'LOW', risk_score, [
+                'No significant operational risk expected'
+            ]
+
+
+    brightness = st.selectbox(
+        "Parlaklık",
+        ['düşük','orta','yüksek']
+    )
+
+    color = st.selectbox(
+        "Renk",
+        ['tek renk','çok renkli']
+    )
+
+    extent = st.selectbox(
+        "Yayılım",
+        ['dar','geniş']
+    )
+
+    temporal = st.selectbox(
+        "Zamansal davranış",
+        ['sakin','değişken','patlama']
+    )
+
+
+    if st.button("Risk hesapla"):
+
+        risk, score, impacts = aurora_risk_model(
             brightness,
-            color_variety,
-            spatial_extent,
-            temporal_behavior
+            color,
+            extent,
+            temporal
         )
 
-        st.subheader("SONUÇ")
+        comment = academic_interpretation(risk)
+
+        st.write("### SONUÇ")
+
         st.write("Risk Seviyesi:", risk)
         st.write("Risk Skoru:", score)
+
         st.write("Olası Etkiler:")
-        for e in effects:
+        for e in impacts:
             st.write("-", e)
+
+        st.write("Yorum:")
+        st.write(comment)
