@@ -313,40 +313,4 @@ if secim == "Manuel giriş":
 
         st.plotly_chart(fig)
 
-        st.markdown("### Eşik Simülasyonu")
-
-    if st.button("Eşik simülasyonunu çalıştır"):
-    
-        brightness_list = ['düşük','orta','yüksek']
-    
-        # Kullanıcının seçtiği değerleri kullan
-        color_val = color
-        extent_val = extent
-        temporal_val = temporal
-    
-        results = []
-        scores = []
-    
-        for b in brightness_list:
-    
-            risk, score, impacts = aurora_risk_model(
-                b,
-                color_val,
-                extent_val,
-                temporal_val
-            )
-    
-            results.append(b)
-            scores.append(score)
-    
-        import matplotlib.pyplot as plt
-    
-        fig, ax = plt.subplots()
-    
-        ax.plot(results, scores, marker="o")
-    
-        ax.set_title("Eşik Simülasyonu - Parlaklık Değişimi")
-        ax.set_xlabel("Aurora parlaklığı")
-        ax.set_ylabel("Risk skoru")
-    
         st.pyplot(fig)
