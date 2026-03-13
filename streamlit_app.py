@@ -314,3 +314,99 @@ if secim == "Manuel giriş":
         st.plotly_chart(fig)
 
         st.pyplot(fig)
+
+    st.markdown("### Eşik Simülasyonu")
+    
+    param = st.selectbox(
+        "Eşik hangi parametreye göre incelensin?",
+        ["Parlaklık", "Renk", "Yayılım", "Zamansal davranış"]
+    )
+    
+    if st.button("Simülasyonu çalıştır"):
+    
+        results = []
+        scores = []
+    
+        brightness_list = ['düşük','orta','yüksek']
+        color_list = ['tek renk','çok renkli']
+        extent_list = ['dar','geniş']
+        temporal_list = ['sakin','değişken','patlama']
+    
+        # Kullanıcının seçtiği değerleri al
+        b0 = brightness
+        c0 = color
+        e0 = extent
+        t0 = temporal
+    
+    
+        if param == "Parlaklık":
+    
+            for b in brightness_list:
+    
+                risk, score, _ = aurora_risk_model(
+                    b,
+                    c0,
+                    e0,
+                    t0
+                )
+    
+                results.append(b)
+                scores.append(score)
+    
+    
+        if param == "Renk":
+    
+            for c in color_list:
+    
+                risk, score, _ = aurora_risk_model(
+                    b0,
+                    c,
+                    e0,
+                    t0
+                )
+    
+                results.append(c)
+                scores.append(score)
+    
+    
+        if param == "Yayılım":
+    
+            for e in extent_list:
+    
+                risk, score, _ = aurora_risk_model(
+                    b0,
+                    c0,
+                    e,
+                    t0
+                )
+    
+                results.append(e)
+                scores.append(score)
+    
+    
+        if param == "Zamansal davranış":
+    
+            for t in temporal_list:
+    
+                risk, score, _ = aurora_risk_model(
+                    b0,
+                    c0,
+                    e0,
+                    t
+                )
+    
+                results.append(t)
+                scores.append(score)
+    
+    
+        import matplotlib.pyplot as plt
+    
+        fig, ax = plt.subplots()
+    
+        ax.plot(results, scores, marker="o")
+    
+        ax.set_title("Eşik Simülasyonu")
+        ax.set_xlabel(param)
+        ax.set_ylabel("Risk skoru")
+    
+        st.pyplot(fig)
