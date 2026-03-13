@@ -57,22 +57,19 @@ if secim == "Görsel yükle":
 
         if score >= 7:
             return 'HIGH', score, [
-                'GNSS signal degradation likely',
-                'HF communication disruption possible',
-                'Scientific measurements may be unreliable'
+                'GNSS sinyal doğruluğunda belirgin bozulmalar oluşabilir',
+                'Yüksek frekanslı (HF) haberleşme sistemlerinde kesintiler meydana gelebilir',
+                'Bilimsel ölçüm ve veri toplama süreçlerinde belirsizlik artabilir'
             ]
-
         elif score >= 5:
             return 'MODERATE', score, [
-                'Minor GNSS inaccuracies possible',
-                'Communication disturbance possible'
+                'GNSS konum doğruluğunda sınırlı sapmalar oluşabilir',
+                'Haberleşme sistemlerinde geçici etkiler gözlenebilir'
             ]
-
         else:
             return 'LOW', score, [
-                'No significant operational risk expected'
+                'Önemli bir operasyonel risk beklenmemektedir'
             ]
-
 
     def extract_features(img):
 
@@ -217,26 +214,23 @@ if secim == "Manuel giriş":
         if risk_score >= 9:
 
             return 'HIGH', risk_score, [
-                'GNSS signal degradation likely',
-                'HF communication disruption possible',
-                'Scientific measurements may be unreliable'
+                'GNSS sinyal doğruluğunda belirgin bozulmalar oluşabilir',
+                'Yüksek frekanslı (HF) haberleşme sistemlerinde kesintiler meydana gelebilir',
+                'Bilimsel ölçüm ve veri toplama süreçlerinde belirsizlik artabilir'
             ]
-
 
         elif risk_score >= 6:
 
             return 'MODERATE', risk_score, [
-                'Minor GNSS inaccuracies possible',
-                'Communication disturbance possible'
+                'GNSS konum doğruluğunda sınırlı sapmalar oluşabilir',
+                'Haberleşme sistemlerinde geçici etkiler gözlenebilir'
             ]
-
 
         else:
 
             return 'LOW', risk_score, [
-                'No significant operational risk expected'
+                'Önemli bir operasyonel risk beklenmemektedir'
             ]
-
 
     brightness = st.selectbox(
         "Parlaklık",
