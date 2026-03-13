@@ -173,7 +173,7 @@ if secim == "Görsel yükle":
 
             fig = go.Figure(go.Indicator(
                 mode="gauge+number",
-                value=score,   
+                value=avg_score,   
                 title={'text': "GNSS Risk Skoru"},
                 gauge={
                     'axis': {'range': [0, 12]},
