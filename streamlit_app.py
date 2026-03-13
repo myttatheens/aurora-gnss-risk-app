@@ -177,7 +177,7 @@ if secim == "Görsel yükle":
                 title={'text': "GNSS Risk Skoru"},
                 gauge={
                     'axis': {'range': [0, 12]},
-                    'bar': {'color': "red"},
+                    'bar': {'color': "white"},
                     'steps': [    
                         {'range': [0, 5], 'color': "green"},
                         {'range': [5, 8], 'color': "orange"},
@@ -302,7 +302,7 @@ if secim == "Manuel giriş":
             title={'text': "GNSS Risk Skoru"},
             gauge={
                 'axis': {'range': [0, 12]},
-                'bar': {'color': "red"},
+                'bar': {'color': "white"},
                 'steps': [
                     {'range': [0, 5], 'color': "green"},
                     {'range': [5, 8], 'color': "orange"},
